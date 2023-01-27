@@ -1,17 +1,25 @@
 #ifndef __COMMON__
 #define __COMMON__ "common.h"
 
+#include "settings.h"
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-#include "game.h"
+typedef unsigned char byte;
+extern byte CellBoard[];
+
+void GameInit(void);
+void GameUpdate(void);
 
 GLFWwindow* WindowCreate();
 
-void WindowRunloop(GLFWwindow*, unsigned char*, GLuint, GLuint);
-
 GLuint NewShader(GLenum shaderType, const char*);
-
 GLuint NewTexture(unsigned char*);
 
 #endif /* ! */

@@ -1,5 +1,29 @@
 #include "common.h"
 
+void WindowRunloop(GLFWwindow* window, GLuint vao, GLuint tex)
+{
+    while(!glfwWindowShouldClose(window))
+    {
+        glfwPollEvents();
+        
+        if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+            glfwSetWindowShouldClose(window, GL_TRUE);    
+
+        glBindVertexArray(vao);
+
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    
+        glfwSwapBuffers(window);
+    
+        GameUpdate();
+        
+        glBindTexture(GL_TEXTURE_2D, tex);
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, BOARD_WIDTH, BOARD_HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, CellBoard);
+
+        sleep(0.4);
+    }
+}
+
 int main(void)
 {   
     float vertices[] = {
@@ -15,11 +39,8 @@ int main(void)
         0, 1, 3,
         1, 2, 3
     };
-
-    unsigned char* b = init_board(WIDTH, HEIGHT);
-    clear_board(b, WIDTH, HEIGHT);
-    seed_board(b, WIDTH, HEIGHT);
-
+    
+    GameInit();
     glfwInit();
     
     GLFWwindow* window = WindowCreate();
@@ -63,8 +84,8 @@ int main(void)
 
     glUseProgram(shaderProg);
     
-    GLuint tex = NewTexture(b);
-    WindowRunloop(window, b, vao, tex);
+    GLuint tex = NewTexture(CellBoard);
+    WindowRunloop(window, vao, tex);
 
     glDetachShader(shaderProg, vert);
     glDetachShader(shaderProg, frag);

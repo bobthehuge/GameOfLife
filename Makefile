@@ -1,19 +1,20 @@
-CPPFLAGS = 
 CC = gcc
 CFLAGS = -Wall -Wextra -O3 -lGL -lglfw -lGLEW
-LDFLAGS =
 LDLIBS = -lGL -lglfw -lGLEW
 
-SRC = game.c common.c window.c
+SRC = game.c helper.c window.c
 OBJ = ${SRC:.c=.o}
-DEP = ${SRC:.c=.d}
 EXE = gameoflife
 
-all: 
-	$(CC) $(CFLAGS) $(SRC) -o $(EXE)
+all: build run clean
 
-window: window.o
-	$(CC) $(CFLAGS) $(SRC) $(LDLIBS) -o $(EXE)
+build: comp link
+
+comp:
+	$(CC) $(CFLAGS) $(SRC) -c
+
+link:
+	$(CC) $(CFLAGS) $(OBJ) -o $(EXE)
 
 run:
 	./$(EXE)

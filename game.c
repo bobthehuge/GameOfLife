@@ -1,55 +1,43 @@
-#include "game.h"
+#include "common.h"
+
+byte CellBoard[BOARD_WIDTH * BOARD_HEIGHT * 3];
+
+byte BufferBoard[BOARD_WIDTH * BOARD_HEIGHT * 3];
 
 int mod(int a, int b)
 {
     return a - (a/b) * b;
 }
 
-int _I(int i, int j, int w)
+int _I(int i, int j)
 {
-    return (i*w+j)*3;
+    return (i*BOARD_WIDTH+j)*3;
 }
 
-GLint get(unsigned char* b, int i, int j, int w)
+int get(byte* b, int i, int j)
 {
-    return (b[_I(i,j,w)] << 16) + (b[_I(i,j,w) + 1] << 8) + b[_I(i,j,w) + 2];
+    return (b[_I(i,j)] << 16) + (b[_I(i,j) + 1] << 8) + b[_I(i,j) + 2];
 }
 
-void set(unsigned char* b, int i, int j, int value, int w)
+void set(byte* b, int i, int j, int value)
 {
-    b[_I(i,j,w)] = (unsigned char) ((value & 0x00FF0000) >> 16);
-    b[_I(i,j,w)+1] = (unsigned char) ((value & 0x0000FF00) >> 8);
-    b[_I(i,j,w)+2] = (unsigned char) (value & 0x000000FF);
+    b[_I(i,j)] = (unsigned char) ((value & 0x00FF0000) >> 16);
+    b[_I(i,j)+1] = (unsigned char) ((value & 0x0000FF00) >> 8);
+    b[_I(i,j)+2] = (unsigned char) (value & 0x000000FF);
 }
 
-unsigned char* init_board(int w, int h)
+void seed_board()
 {
-    return malloc(sizeof(unsigned char)*w*h*3);
-}
-
-void clear_board(unsigned char* b, int h, int w)
-{
-    for (int i = 0; i < h; i++) 
+    for (int i = 0; i < BOARD_HEIGHT; i++) 
     {
-        for (int j = 0; j < w; j++) 
+        for (int j = 0; j < BOARD_WIDTH; j++) 
         {
-            set(b, i, j, DEAD, w);
+            set(CellBoard, i, j, (rand() % 2) == 0 ? ALIVE : DEAD);
         }
     }
 }
 
-void seed_board(unsigned char* b, int w, int h)
-{
-    for (int i = 0; i < h; i++) 
-    {
-        for (int j = 0; j < w; j++) 
-        {
-            set(b, i, j, (rand() % 2) == 0 ? ALIVE : DEAD, w);
-        }
-    }
-}
-
-int count_neighbors(unsigned char* b, int x, int y, int w, int h)
+int count_neighbors(int x, int y)
 {
     int count = 0;
 
@@ -62,39 +50,38 @@ int count_neighbors(unsigned char* b, int x, int y, int w, int h)
                 continue;
             }
 
-            count += get(b, mod(i,h), mod(j,w), w) == ALIVE ? 1 : 0;
+            count += get(CellBoard, mod(i,BOARD_HEIGHT), mod(j,BOARD_WIDTH)) == ALIVE ? 1 : 0;
         }
     }
 
     return count;
 }
 
-void update_b(unsigned char* b, int w, int h)
+void GameInit()
 {
-    unsigned char* nb = init_board(w, h);
+    seed_board();
+}
 
-    clear_board(nb, w, h);
-
-    for (int i = 0; i < h; i++) 
+void GameUpdate()
+{    
+    for (int i = 0; i < BOARD_HEIGHT; i++) 
     {
-        for (int j = 0; j < w; j++) 
+        for (int j = 0; j < BOARD_WIDTH; j++) 
         {
-            int c = count_neighbors(b, i, j, w, h);
+            int c = count_neighbors(i, j);
 
-            if (get(b, i, j, w) == ALIVE)
-                set(nb, i, j, (c == 3 || c == 2) ? ALIVE : DEAD, w);
+            if (get(CellBoard, i, j) == ALIVE)
+                set(BufferBoard, i, j, (c == 3 || c == 2) ? ALIVE : DEAD);
             else 
-                set(nb, i, j, (c == 3) ? ALIVE : DEAD, w);
+                set(BufferBoard, i, j, (c == 3) ? ALIVE : DEAD);
         }
     }
 
-    for (int i = 0; i < h; i++) 
+    for (int i = 0; i < BOARD_HEIGHT; i++) 
     {
-        for (int j = 0; j < w; j++) 
+        for (int j = 0; j < BOARD_WIDTH; j++) 
         {
-            set(b, i, j, get(nb, i, j, w), w);
+            set(CellBoard, i, j, get(BufferBoard, i, j));
         }
     }
-
-    free(nb);
 }
