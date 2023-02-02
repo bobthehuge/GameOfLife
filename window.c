@@ -1,33 +1,50 @@
+#include <bobgl.h>
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
+
 #include "common.h"
 
-void WindowRunloop(GLFWwindow* window, GLuint vao, GLuint tex)
+int WINDOW_WIDTH = 1920;
+int WINDOW_HEIGHT = 1080;
+char* WINDOW_TITLE = "test";
+int RESIZABLE = 0;
+int FULLSCREEN = 0;
+
+GLuint vao;
+GLuint tex;
+GLuint program;
+GLuint vert;
+GLuint frag;
+
+void bglOnLoad()
 {
-    while(!glfwWindowShouldClose(window))
-    {
-        glfwPollEvents();
-        
-        if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-            glfwSetWindowShouldClose(window, GL_TRUE);    
-
-        glBindVertexArray(vao);
-
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-    
-        glfwSwapBuffers(window);
-    
-        GameUpdate();
-        
-        glBindTexture(GL_TEXTURE_2D, tex);
-        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, BOARD_WIDTH, BOARD_HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, CellBoard);
-
-        sleep(0.4);
-    }
+    GameInit();
 }
+
+void bglOnUpdate()
+{
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, GL_TRUE);
+
+    glBindVertexArray(vao);
+
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+    GameUpdate();
+    
+    glBindTexture(GL_TEXTURE_2D, tex);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, BOARD_WIDTH, BOARD_HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, CellBoard);
+
+    sleep(0.4);
+}
+
+void bglOnUnload()
+{}
 
 int main(void)
 {   
     float vertices[] = {
-    //  Position      Texcoords
+    //   Position      Texcoords
         -1.0f,  1.0f,  0.0f, 0.0f, // Top-left
          1.0f,  1.0f,  1.0f, 0.0f, // Top-right
          1.0f, -1.0f,  1.0f, 1.0f, // Bottom-right
@@ -39,27 +56,20 @@ int main(void)
         0, 1, 3,
         1, 2, 3
     };
+
+    bglInit();
     
-    GameInit();
-    glfwInit();
-    
-    GLFWwindow* window = WindowCreate();
-    glfwMakeContextCurrent(window);
+    vert = NewShader(GL_VERTEX_SHADER, "Shaders/vert.glsl");
+    frag = NewShader(GL_FRAGMENT_SHADER, "Shaders/frag.glsl");
 
-    glewInit();
-
-    GLuint vert = NewShader(GL_VERTEX_SHADER, "Shaders/vert.glsl");
-    GLuint frag = NewShader(GL_FRAGMENT_SHADER, "Shaders/frag.glsl");
-
-    GLuint shaderProg = glCreateProgram();
-    glAttachShader(shaderProg, vert);
-    glAttachShader(shaderProg, frag);
-    glLinkProgram(shaderProg);
+    program = glCreateProgram();
+    glAttachShader(program, vert);
+    glAttachShader(program, frag);
+    glLinkProgram(program);
 
     glDeleteShader(vert);
     glDeleteShader(frag);
 
-    GLuint vao;
     glGenVertexArrays(1, &vao);
     glBindVertexArray(vao);
     
@@ -73,24 +83,24 @@ int main(void)
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-    GLint posAttrib = glGetAttribLocation(shaderProg, "position");
+    GLint posAttrib = glGetAttribLocation(program, "position");
     glEnableVertexAttribArray(posAttrib);
     glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, sizeof(float)*4, 0);
     
-    GLint texAttrib = glGetAttribLocation(shaderProg, "texcoord");
+    GLint texAttrib = glGetAttribLocation(program, "texcoord");
     glEnableVertexAttribArray(texAttrib);
     glVertexAttribPointer(texAttrib, 2, GL_FLOAT, GL_FALSE, sizeof(float)*4, 
         (void*)(sizeof(float)*2));
 
-    glUseProgram(shaderProg);
+    glUseProgram(program);
     
-    GLuint tex = NewTexture(CellBoard);
-    WindowRunloop(window, vao, tex);
+    tex = NewTexture(CellBoard);
+    
+    bglRunLoop();
 
-    glDetachShader(shaderProg, vert);
-    glDetachShader(shaderProg, frag);
+    glDetachShader(program, vert);
+    glDetachShader(program, frag);
     glDeleteTextures(1, &tex);
-    glfwTerminate();
 
     return 0;
 }

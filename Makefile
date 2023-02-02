@@ -1,6 +1,6 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -O3 -lGL -lglfw -lGLEW
-LDLIBS = -lGL -lglfw -lGLEW
+CFLAGS = -Wall -Wextra -O3 `pkg-config --cflags --libs gl glfw3 glew bobgl`
+LDLIBS = `pkg-config --cflags --libs gl glfw3 glew bobgl`
 
 SRC = game.c helper.c window.c
 OBJ = ${SRC:.c=.o}
@@ -14,7 +14,7 @@ comp:
 	$(CC) $(CFLAGS) $(SRC) -c
 
 link:
-	$(CC) $(CFLAGS) $(OBJ) -o $(EXE)
+	$(CC) $(OBJ) -o $(EXE) $(CFLAGS)
 
 run:
 	./$(EXE)

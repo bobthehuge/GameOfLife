@@ -1,5 +1,5 @@
-#ifndef __COMMON__
-#define __COMMON__ "common.h"
+#ifndef COMMON
+#define COMMON 1
 
 #include "settings.h"
 
